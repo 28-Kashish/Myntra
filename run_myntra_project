@@ -1,0 +1,102 @@
+import subprocess
+import os
+import time
+import sys
+
+def run_command(command, description):
+    """Run a command and handle output"""
+    print(f"\n{'='*60}")
+    print(f"📋 {description}")
+    print(f"{'='*60}")
+    print(f"Executing: {command}\n")
+    
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    
+    if result.stdout:
+        print(result.stdout)
+    if result.stderr and "error" in result.stderr.lower():
+        print("⚠️  Warnings/Errors:")
+        print(result.stderr)
+    
+    return result.returncode == 0
+
+def main():
+    print("""
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                                                              ║
+    ║     🛍️  MYNTRA SALES DASHBOARD - COMPLETE SETUP            ║
+    ║                                                              ║
+    ╚══════════════════════════════════════════════════════════════╝
+    """)
+    
+    # Check required files
+    required_files = [
+        'myntra_data_generator.py',
+        'myntra_data_cleaner.py', 
+        'myntra_database_setup.py',
+        'myntra_app.py'
+    ]
+    
+    missing_files = [f for f in required_files if not os.path.exists(f)]
+    
+    if missing_files:
+        print("❌ Missing required files:")
+        for f in missing_files:
+            print(f"   - {f}")
+        print("\nPlease ensure all Python files are in the current directory.")
+        return
+    
+    # Step 1: Generate messy data
+    print("\n🔧 STEP 1: Generating Myntra Messy Data")
+    if run_command("python myntra_data_generator.py", "Running data generator..."):
+        print("✅ Messy data generated successfully!")
+    else:
+        print("❌ Failed to generate data")
+        return
+    
+    time.sleep(2)
+    
+    # Step 2: Clean the data
+    print("\n🧹 STEP 2: Cleaning Myntra Data")
+    if run_command("python myntra_data_cleaner.py", "Running data cleaner..."):
+        print("✅ Data cleaned successfully!")
+    else:
+        print("❌ Failed to clean data")
+        return
+    
+    time.sleep(2)
+    
+    # Step 3: Setup database
+    print("\n💾 STEP 3: Setting up MySQL Database")
+    print("⚠️  Make sure:")
+    print("   1. MySQL is running")
+    print("   2. You've updated the password in myntra_database_setup.py")
+    
+    response = input("\nHave you updated the MySQL password? (yes/no): ")
+    if response.lower() != 'yes':
+        print("Please update the password in myntra_database_setup.py first!")
+        print("Look for: MyntraDatabase(password='your_password')")
+        return
+    
+    if run_command("python myntra_database_setup.py", "Setting up database..."):
+        print("✅ Database setup completed!")
+    else:
+        print("❌ Database setup failed.")
+        print("\nTroubleshooting:")
+        print("1. Check if MySQL is running")
+        print("2. Verify username/password")
+        print("3. Try running: mysql -u root -p")
+        return
+    
+    time.sleep(2)
+    
+    # Step 4: Launch dashboard
+    print("\n🚀 STEP 4: Launching Myntra Dashboard")
+    print("Starting Streamlit app...")
+    print("The dashboard will open in your browser automatically")
+    print("Press Ctrl+C to stop the dashboard\n")
+    
+    os.system("streamlit run myntra_app.py")
+
+if __name__ == "__main__":
+    main()
